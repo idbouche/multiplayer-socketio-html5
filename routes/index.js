@@ -17,7 +17,7 @@ var victoir2      = 0;
 
 var Player = function(id){
     var play = {
-        x:10,
+        x:20,
         y:10,
         id:id,
         user :'',
@@ -54,8 +54,8 @@ var Ball = function(){
         width:20,
         height:20,
         pressingStart:false,
-        vx:2,
-        vy:1,
+        vx:4,
+        vy:2,
         state:false,
     }
 
@@ -158,21 +158,10 @@ module.exports = function(io) {
     return router;
 }
 
-var nouvoEmmit = function(cont,socket){
-    socket.emit('cont',{timer:cont} );
 
-}
 
  /* Gestion de collision  ******************************************************/
-var rangeIntersect = function(min0, max0, min1, max1) {
-    return Math.max(min0, max0) >= Math.min(min1, max1) &&
-        Math.min(min0, max0) <= Math.max(min1, max1);
-}
 
-var colision = function(r0, r1) {
-    return rangeIntersect(r0.x, r0.x + r0.width, r1.x, r1.x + r1.width) &&
-        rangeIntersect(r0.y, r0.y + r0.height, r1.y, r1.y + r1.height);
-}
 /*Fin gestion collision  ******************************************************/
 
 setInterval(function(){
@@ -195,22 +184,39 @@ setInterval(function(){
         });
 
         if (pack[0] !== undefined && pack[1] !== undefined){
-
             if (i !== 0){
-                player.x=760;
+                player.x =760;
             }
-            if (colision(pack[0],ball)){
-                     ball.vx = -ball.vx;
-                 }
-            if (colision(pack[1],ball)){
-                     ball.vx = -ball.vx;
-                 }
+
+            var topY = pack[0].y;
+            var bottomY = pack[0].y + pack[0].height;
+            var leftX = pack[0].x;
+            var reightX = pack[0].x + pack[0].width;
+
+
+            var topY1 = pack[1].y;
+            var bottomY1 = pack[1].y + player.height;
+            var leftX1 = pack[1].x;
+            var reightX1 = pack[1].x + player.width;
+
+            //console.log(pack[1]);
+
+
+            if(ball.x > pack[1].x && ball.x < pack[1].x + pack[1].width && ball.y > pack[1].y && ball.y < pack[1].y + pack[1].height){
+                   console.log('ok');
+                   ball.vx = -ball.vx;
+            }
+
+            if(ball.x > pack[0].x && ball.x < pack[0].x + pack[1].width && ball.y > pack[0].y && ball.y < pack[0].y + pack[0].height){
+                   console.log('ok');
+                   ball.vx = -ball.vx;
+            }
             if (ball.x > 773) {
                 score2 ++
                 ball.x = 400
                 ball.y = 250
             }
-            if (ball.x < 6 ) {
+            if (ball.x < 3 ) {
                 score1 ++
                 ball.x = 400
                 ball.y = 250

@@ -43,7 +43,7 @@ var loop = function(data){
 
             nom1.innerHTML = 'Nom : '+ data[i].User + " <span>Score : "+ data[i].score2 + '</span>'
         }else {
-            cv.fillRect(780,data[i].y,data[i].width,data[i].height);
+            cv.fillRect(770,data[i].y,data[i].width,data[i].height);
 
             nom2.innerHTML = 'Nom : '+ data[i].User + " <span>Score : " + data[i].score1 + '</span>'
     	 }
