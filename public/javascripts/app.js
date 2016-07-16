@@ -38,14 +38,19 @@ var loop = function(data){
 
         	cv.fillRect(data[i].x,data[i].y,data[i].width,data[i].height);
 
-            ctx.fillRect(data[i].Bx,data[i].By+35,25,25)
+            //ctx.fillRect(data[i].Bx,data[i].By+35,25,25)
+            ctx.beginPath();
+            ctx.arc(data[i].Bx, data[i].By, 10, 0, 2 * Math.PI,false);
+            ctx.fill();
             ctx.fillStyle = 'black';
 
             nom1.innerHTML = 'Nom : '+ data[i].User + " <span>Score : "+ data[i].score2 + '</span>'
+            console.log(data[i].victoir2);
         }else {
             cv.fillRect(770,data[i].y,data[i].width,data[i].height);
 
             nom2.innerHTML = 'Nom : '+ data[i].User + " <span>Score : " + data[i].score1 + '</span>'
+            console.log(data[i].victoir1);
     	 }
 
     }
@@ -62,18 +67,18 @@ socket.on('newPositions',function(data){
 
 });
 
-socket.on('victoir1',function(data){
-
-    console.log(data.victoir1);
-
-
-});
-
-socket.on('victoir2',function(data){
-
-   console.log(data.victoir2);
-
-});
+// socket.on('victoir1',function(data){
+//
+//     console.log(data.victoir1);
+//
+//
+// });
+//
+// socket.on('victoir2',function(data){
+//
+//    console.log(data.victoir2);
+//
+// });
 
 socket.on('state',function(data){
    if (data.state) {

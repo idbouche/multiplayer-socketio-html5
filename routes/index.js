@@ -35,13 +35,12 @@ var Player = function(id){
         if(play.pressingDown)
             play.y += play.maxSpd;
 
-        if (play.y + 90 >= 495 ) {
-            play.y = 410;
+        if (play.y + 100 >= 500 ) {
+            play.y = 400;
             }
         if ( play.y < 0) {
             play.y = 0;
             }
-
     }
     return play;
 }
@@ -51,10 +50,8 @@ var Ball = function(){
     var ball = {
         x:387,
         y:240,
-        width:20,
-        height:20,
         pressingStart:false,
-        vx:4,
+        vx:2,
         vy:2,
         state:false,
     }
@@ -65,12 +62,12 @@ var Ball = function(){
             ball.x += ball.vx;
             ball.y += ball.vy;
 
-            if (ball.y+ ball.vy >= 450 || ball.y + ball.vy < -30) {
-                ball.vy = -ball.vy;
+            if (ball.y < 0 || ball.y  > 500) {
+                ball.vy *= -1;
             }
-            if (ball.x + ball.vx > 780 || ball.x + ball.vx < 0) {
-                ball.vx = -ball.vx;
-            }
+            // if (ball.x  > 800 || ball.x < 0) {
+            //     ball.vx *= -1;
+            // }
         }
     }
 
@@ -154,6 +151,8 @@ module.exports = function(io) {
         });
 
 
+
+
     });
     return router;
 }
@@ -181,6 +180,8 @@ setInterval(function(){
             By:ball.y,
             score1:score1,
             score2:score2,
+            victoir1:victoir1,
+            victoir2:victoir2,
         });
 
         if (pack[0] !== undefined && pack[1] !== undefined){
@@ -203,23 +204,36 @@ setInterval(function(){
 
 
             if(ball.x > pack[1].x && ball.x < pack[1].x + pack[1].width && ball.y > pack[1].y && ball.y < pack[1].y + pack[1].height){
-                   console.log('ok');
-                   ball.vx = -ball.vx;
+                   //console.log('ok');
+                   ball.vx *= -1;
+
             }
 
             if(ball.x > pack[0].x && ball.x < pack[0].x + pack[1].width && ball.y > pack[0].y && ball.y < pack[0].y + pack[0].height){
-                   console.log('ok');
-                   ball.vx = -ball.vx;
+                   //console.log('ok1');
+                   ball.vx *= -1;
+
             }
-            if (ball.x > 773) {
+
+            if (ball.x > 800) {
                 score2 ++
                 ball.x = 400
                 ball.y = 250
             }
-            if (ball.x < 3 ) {
+            if (ball.x < 0) {
                 score1 ++
                 ball.x = 400
                 ball.y = 250
+            }
+
+            if (score1 >= 11 && (score1 - score2)>= 2 ){
+                victoir1=1;
+                ball.state = false;
+            }
+
+            if (score2 >= 11 && (score2 - score1)>= 2 ){
+                victoir2=1;
+                ball.state = false;
             }
         }
     }
@@ -228,15 +242,7 @@ setInterval(function(){
     for(var i in SOCKET_LIST){
         var socket = SOCKET_LIST[i];
         socket.emit('newPositions',pack);
-        if (score1 == 11 && (score1 - score2)>= 2 ){
-            victoir1++;
-            socket.emit('victoir1',{victoir1:victoir1, gamesOver:true} );
-        }
 
-        if (score2 == 11 && (score2 - score1)>= 2 ){
-            victoir2++;
-            socket.emit('victoir2',{victoir2:victoir2, gamesOver:true} );
-        }
     }
 
 },1000/25);
