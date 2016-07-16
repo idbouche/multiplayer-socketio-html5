@@ -1,8 +1,23 @@
 extends layout
 
 block content
-	.center
-		h1= title
-		h1= title
-		p Welcome to #{title}
-		canvas#cv
+
+	h1= title
+	.row
+		.small-3.columns
+			form(id='form')
+				label User
+				input(type="text" id="nom")
+				input.success.button(type="submit" id="go" value="Entrez")
+		.small-3.columns
+			#list
+	.row
+		.small-2.large-2.columns
+			p#nom1 Nom :
+		.small-8.large-8.columns.center
+			p VS
+		.small-2.large-2.columns
+			p#nom2 Nom :
+	.small-12.large-12.columns.center
+		p#tImer
+		canvas#cv( width="800" height="500" style="border:1px solid #000000;")

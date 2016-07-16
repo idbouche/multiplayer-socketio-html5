@@ -2,8 +2,14 @@
 	text-align: center;
 }
 
-#cv{
-	border: 1px solid black;
-	width: 750px;
-	height: 650px;
+span {
+	color: green
+}
+
+#tImer{
+	font-size: 100px;
+	font-weight: bold;
+	position: absolute;
+	top: 450px;
+	left: 650px;
 }
