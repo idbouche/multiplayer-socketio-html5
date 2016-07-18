@@ -7,6 +7,7 @@ var nom1    = document.getElementById('nom1');
 var nom2    = document.getElementById('nom2');
 var tIme    = document.getElementById('tImes');
 var go    = document.getElementById('go');
+var gameOver= document.getElementById('gameOver');
 
 var socket = io();
 
@@ -30,7 +31,6 @@ go.addEventListener('click',function () {
 })
 
 
-
 var loop = function(data){
     for(var i = 0 ; i < data.length; i++){
 
@@ -45,12 +45,12 @@ var loop = function(data){
             ctx.fillStyle = 'black';
 
             nom1.innerHTML = 'Nom : '+ data[i].User + " <span>Score : "+ data[i].score2 + '</span>'
-            console.log(data[i].victoir2);
+            //console.log(data[i].victoir2);
         }else {
             cv.fillRect(770,data[i].y,data[i].width,data[i].height);
 
             nom2.innerHTML = 'Nom : '+ data[i].User + " <span>Score : " + data[i].score1 + '</span>'
-            console.log(data[i].victoir1);
+            //console.log(data[i].victoir1);
     	 }
 
     }
@@ -67,25 +67,35 @@ socket.on('newPositions',function(data){
 
 });
 
-// socket.on('victoir1',function(data){
-//
-//     console.log(data.victoir1);
-//
-//
-// });
-//
-// socket.on('victoir2',function(data){
-//
-//    console.log(data.victoir2);
-//
-// });
+socket.on('rejeuer',function(data){
+    if(data.rejeuer){
+      gameOver.innerHTML = "<p> Pour contenui tapper sur la touche ESPACE</p><p>Si non sur la touche ESC pour quite</p>";
+      document.onkeydown = function(event){
+          if(event.keyCode === 27){
+              socket.emit('keyPres',{inputId:'esc',state:true});
+              gameOver.innerHTML='';}
+          if(event.keyCode === 32){
+              socket.emit('keyPres',{inputId:'espace',state:true});
+              gameOver.innerHTML= '';}
+
+      }
+
+          document.onkeyup = function(event){
+              if(event.keyCode === 27)
+                  socket.emit('keyPres',{inputId:'esc',state:false});
+              else if(event.keyCode === 32)
+                  socket.emit('keyPres',{inputId:'espace',state:false});
+          }
+   }
+});
+
 
 socket.on('state',function(data){
    if (data.state) {
 
       var cont = 3;
       var id = setInterval(function(){
-         console.log(cont);
+         //console.log(cont);
          tImer.innerHTML = cont;
          cont--;
          if (cont === 0){
@@ -109,19 +119,12 @@ socket.on('state',function(data){
     }
  });
 
-socket.on('cont', function(data){
-    console.log(data.timer);
-    ctx.font = "70px Arial";
-    ctx.fillText(data.timer,400,250);
-})
 
 document.onkeydown = function(event){
     if(event.keyCode === 40)
         socket.emit('keyPress',{inputId:'down',state:true});
     else if(event.keyCode === 38)
         socket.emit('keyPress',{inputId:'up',state:true});
-    else if(event.keyCode === 32)
-        socket.emit('keyPress',{inputId:'start',state:true});
 }
 
     document.onkeyup = function(event){
@@ -129,6 +132,4 @@ document.onkeydown = function(event){
             socket.emit('keyPress',{inputId:'down',state:false});
         else if(event.keyCode === 38)
             socket.emit('keyPress',{inputId:'up',state:false});
-        // else if(event.keyCode === 32)
-        //     socket.emit('keyPress',{inputId:'start',state:false});
     }

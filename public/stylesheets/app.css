@@ -7,9 +7,16 @@ span {
 }
 
 #tImer{
-	font-size: 100px;
+	font-size: 80px;
 	font-weight: bold;
 	position: absolute;
-	top: 450px;
-	left: 650px;
+	top: 50%;
+	left: 50%;
+}
+#gameOver{
+	font-size: 20px;
+	font-weight: bold;
+	position: absolute;
+	top: 50%;
+	left: 10%;
 }

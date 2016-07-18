@@ -3,6 +3,8 @@ var router = express.Router();
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io').listen(server,{});
+var db         = require('../modules/db');
+var ObjectID   = require('mongodb').ObjectID;
 
 /* GET home page. */
 
@@ -14,6 +16,7 @@ var score1      = 0;
 var score2      = 0;
 var victoir1      = 0;
 var victoir2      = 0;
+var disconnect  = false;
 
 var Player = function(id){
     var play = {
@@ -51,8 +54,8 @@ var Ball = function(){
         x:387,
         y:240,
         pressingStart:false,
-        vx:2,
-        vy:2,
+        vx:4,
+        vy:4,
         state:false,
     }
 
@@ -65,9 +68,6 @@ var Ball = function(){
             if (ball.y < 0 || ball.y  > 500) {
                 ball.vy *= -1;
             }
-            // if (ball.x  > 800 || ball.x < 0) {
-            //     ball.vx *= -1;
-            // }
         }
     }
 
@@ -92,15 +92,33 @@ module.exports = function(io) {
         socket.id = Math.random();
         SOCKET_LIST[socket.id] = socket;
 
+        var sizeSocket = Object.keys(SOCKET_LIST).length;
+        var player = new Player(socket.id);
         var size = Object.keys(PLAYER_LIST).length;
-
-        var player = Player(socket.id);
         var n = 0;
         socket.on('start',function(dat){
             if (dat.user !== ''){
                 if(size<2){
                     PLAYER_LIST[socket.id] = player;
-                    if (size === 1) {
+                    var collection = db.get().collection('user');
+                    var date = new Date();
+                    collection.insert({
+                                       nom      : dat.user,
+                                       id       : socket.id,
+                                       score    : score1,
+                                       victoir  : victoir1,
+                                       date     : date.getTime()
+                                      },
+                                      function(err, result) {
+                        if (err){
+                            socket.emit('message',{message:"Veuiller ressie"});
+                        }else{           collection.find({'nom':dat.user}).toArray(function(err, dat) {
+                            socket.emit('message',{message:`vous étes bien inscrer  ${dat[0].nom}`});
+                            });
+                        }
+
+                    });
+                    if (size > 0 ) {
                         socket.emit('state',{state:true});
 
                     }else {
@@ -126,38 +144,50 @@ module.exports = function(io) {
 
          })
 
-        console.log(PLAYER_LIST)
-        console.log(size)
-
         var arrlist = Object.keys(ATTENT_LIST).map(function (key) {return ATTENT_LIST[key]});
         if (arrlist.length > 0){
             socket.emit('listattent',arrlist);
             console.log('list'+arrlist);
         }
-        socket.on('disconnect',function(){
-            delete SOCKET_LIST[socket.id];
-            delete PLAYER_LIST[socket.id];
-            delete ATTENT_LIST[socket.id];
-            delete ball
+        console.log(victoir2 + ', ' + victoir1);
+
+
+            socket.on('disconnect',function(){
+                delete SOCKET_LIST[socket.id];
+                delete PLAYER_LIST[socket.id];
+                delete ATTENT_LIST[socket.id];
+                delete ball
             });
 
-        socket.on('keyPress',function(data){
-            if(data.inputId === 'up')
-                player.pressingUp = data.state;
-            else if(data.inputId === 'down')
-                player.pressingDown = data.state;
-            else if(data.inputId === 'start')
-                ball.pressingStart = data.state;
-        });
 
+        socket.on('keyPress',function(data){
+            if(data.inputId === 'up'){
+                player.pressingUp = data.state;}
+            else if(data.inputId === 'down'){
+                player.pressingDown = data.state;}
+        });
+        socket.on('keyPres',function(data){
+
+        if(data.inputId === 'espace'){
+                score2 = 0;
+                score1 = 0;
+                ball.state = true;
+                socket.emit('state',{state:true});
+            }
+
+        if(data.inputId === 'esc'){
+                delete SOCKET_LIST[socket.id];
+                delete PLAYER_LIST[socket.id];
+                delete ATTENT_LIST[socket.id];
+            }
+
+        });
 
 
 
     });
     return router;
 }
-
-
 
  /* Gestion de collision  ******************************************************/
 
@@ -189,20 +219,6 @@ setInterval(function(){
                 player.x =760;
             }
 
-            var topY = pack[0].y;
-            var bottomY = pack[0].y + pack[0].height;
-            var leftX = pack[0].x;
-            var reightX = pack[0].x + pack[0].width;
-
-
-            var topY1 = pack[1].y;
-            var bottomY1 = pack[1].y + player.height;
-            var leftX1 = pack[1].x;
-            var reightX1 = pack[1].x + player.width;
-
-            //console.log(pack[1]);
-
-
             if(ball.x > pack[1].x && ball.x < pack[1].x + pack[1].width && ball.y > pack[1].y && ball.y < pack[1].y + pack[1].height){
                    //console.log('ok');
                    ball.vx *= -1;
@@ -217,24 +233,27 @@ setInterval(function(){
 
             if (ball.x > 800) {
                 score2 ++
+                if (score2 >= 11 && (score2 - score1)>= 2 ){
+                    disconnect = true;
+                    victoir2++ ;
+                    ball.state = false;
+                }
                 ball.x = 400
                 ball.y = 250
             }
             if (ball.x < 0) {
                 score1 ++
+                if (score1 >= 11 && (score1 - score2)>= 2 ){
+                    disconnect = true;
+                    victoir1++;
+                    ball.state = false;
+                }
                 ball.x = 400
                 ball.y = 250
             }
 
-            if (score1 >= 11 && (score1 - score2)>= 2 ){
-                victoir1=1;
-                ball.state = false;
-            }
 
-            if (score2 >= 11 && (score2 - score1)>= 2 ){
-                victoir2=1;
-                ball.state = false;
-            }
+
         }
     }
 
@@ -242,6 +261,12 @@ setInterval(function(){
     for(var i in SOCKET_LIST){
         var socket = SOCKET_LIST[i];
         socket.emit('newPositions',pack);
+        if (disconnect){
+            socket.broadcast.emit('rejeuer' ,{rejeuer: true});
+            console.log('list');
+            disconnect = false;
+
+        }
 
     }
 

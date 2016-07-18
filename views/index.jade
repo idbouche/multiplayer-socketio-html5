@@ -9,6 +9,7 @@ block content
 				label User
 				input(type="text" id="nom")
 				input.success.button(type="submit" id="go" value="Entrez")
+			p= message
 		.small-3.columns
 			#list
 	.row
@@ -20,4 +21,5 @@ block content
 			p#nom2 Nom :
 	.small-12.large-12.columns.center
 		p#tImer
+		p#gameOver
 		canvas#cv( width="800" height="500" style="border:1px solid #000000;")
