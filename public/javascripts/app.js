@@ -6,19 +6,21 @@ var form    = document.getElementById('form');
 var nom1    = document.getElementById('nom1');
 var nom2    = document.getElementById('nom2');
 var tIme    = document.getElementById('tImes');
-var go    = document.getElementById('go');
+var go      = document.getElementById('go');
 var gameOver= document.getElementById('gameOver');
+var rel     = document.getElementById('relaod');
 
 var socket = io();
 
-
+var users = [];
+var scores ;
 
 form.addEventListener("submit", function(e){
     e.preventDefault();
 
     var nom    = document.getElementById('nom').value;
     if(nom !== ''){
-
+        users.push(nom)
         socket.emit('start',{user: nom,  state:true});
         //socket.emit('canvas',{heigth: nom, color: color, state:true});
     }
@@ -30,6 +32,9 @@ go.addEventListener('click',function () {
 
 })
 
+rel.addEventListener('click',function () {
+   location.reload(true);
+})
 
 var loop = function(data){
     for(var i = 0 ; i < data.length; i++){
@@ -45,14 +50,25 @@ var loop = function(data){
             ctx.fillStyle = 'black';
 
             nom1.innerHTML = 'Nom : '+ data[i].User + " <span>Score : "+ data[i].score2 + '</span>'
+            scores=data[i].score2
             //console.log(data[i].victoir2);
         }else {
             cv.fillRect(770,data[i].y,data[i].width,data[i].height);
 
             nom2.innerHTML = 'Nom : '+ data[i].User + " <span>Score : " + data[i].score1 + '</span>'
-            //console.log(data[i].victoir1);
-    	 }
 
+            //console.log(data[i].victoir1);
+            console.log(data[0].score2 + '' +data[1].score1);
+            if (data[i].score2 - data[i].score1 > 0 &&  data[i].score2 == 4 || data[i].score1 - data[i].score2 > 0 &&  data[i].score1 == 4){
+               socket.emit('fin',{state:true ,
+                  score1: data[i].score2,
+                  score2: data[i].score1,
+                  user1 : users[0],
+                  user2 : data[i].User
+               });
+               window.location.href = "/scoreParsial";
+            }
+    	 }
     }
 }
 
@@ -65,29 +81,16 @@ socket.on('newPositions',function(data){
     loop(data);
 
 
+
 });
 
-socket.on('rejeuer',function(data){
-    if(data.rejeuer){
-      gameOver.innerHTML = "<p> Pour contenui tapper sur la touche ESPACE</p><p>Si non sur la touche ESC pour quite</p>";
-      document.onkeydown = function(event){
-          if(event.keyCode === 27){
-              socket.emit('keyPres',{inputId:'esc',state:true});
-              gameOver.innerHTML='';}
-          if(event.keyCode === 32){
-              socket.emit('keyPres',{inputId:'espace',state:true});
-              gameOver.innerHTML= '';}
-
-      }
-
-          document.onkeyup = function(event){
-              if(event.keyCode === 27)
-                  socket.emit('keyPres',{inputId:'esc',state:false});
-              else if(event.keyCode === 32)
-                  socket.emit('keyPres',{inputId:'espace',state:false});
-          }
-   }
-});
+// socket.on('Disconnect',function(data){
+//    if (data.bool) {
+//       gameOver.innerHTML = "<p> " + data.message + "</p>";
+//    }else{
+//       gameOver.innerHTML =" ";
+//    }
+// });
 
 
 socket.on('state',function(data){
@@ -121,13 +124,17 @@ socket.on('state',function(data){
 
 
 document.onkeydown = function(event){
+    //event.preventDefault();
     if(event.keyCode === 40)
         socket.emit('keyPress',{inputId:'down',state:true});
+
     else if(event.keyCode === 38)
         socket.emit('keyPress',{inputId:'up',state:true});
+
 }
 
     document.onkeyup = function(event){
+        //event.preventDefault();
         if(event.keyCode === 40)
             socket.emit('keyPress',{inputId:'down',state:false});
         else if(event.keyCode === 38)

@@ -16,7 +16,7 @@ var score1      = 0;
 var score2      = 0;
 var victoir1      = 0;
 var victoir2      = 0;
-var disconnect  = false;
+var Disconnect  = false;
 
 var Player = function(id){
     var play = {
@@ -156,6 +156,7 @@ module.exports = function(io) {
                 delete SOCKET_LIST[socket.id];
                 delete PLAYER_LIST[socket.id];
                 delete ATTENT_LIST[socket.id];
+                Disconnect = true;
                 delete ball
             });
 
@@ -166,25 +167,36 @@ module.exports = function(io) {
             else if(data.inputId === 'down'){
                 player.pressingDown = data.state;}
         });
-        socket.on('keyPres',function(data){
+        socket.on('fin', function (data) {
+            console.log('cococococ   ', data);
+            if (data.state) {
+                console.log();
+                // socket.emit('Disconnect',{message:'Vous pouvez pas jeuer un des vous et disconnect actualiser',bool:true })
+                var collection = db.get().collection('user');
+                collection.update({'nom':data.user1},{
+                    $set: {
+                        score: data.score1,
+                        victoir: victoir2,
+                    }
+                }, function(err, result) {
+                        console.log('fin');
 
-        if(data.inputId === 'espace'){
-                score2 = 0;
-                score1 = 0;
-                ball.state = true;
-                socket.emit('state',{state:true});
-            }
+                    });
 
-        if(data.inputId === 'esc'){
-                delete SOCKET_LIST[socket.id];
-                delete PLAYER_LIST[socket.id];
-                delete ATTENT_LIST[socket.id];
-            }
-
-        });
+                collection.update({'nom':data.user2},{
+                    $set: {
+                        score: data.score2,
+                        victoir: victoir2,
+                    }
+                }, function(err, result) {
+                        console.log('fin22');
+                    });
 
 
+                    }
 
+
+            });
     });
     return router;
 }
@@ -234,7 +246,7 @@ setInterval(function(){
             if (ball.x > 800) {
                 score2 ++
                 if (score2 >= 11 && (score2 - score1)>= 2 ){
-                    disconnect = true;
+                    //disconnect = true;
                     victoir2++ ;
                     ball.state = false;
                 }
@@ -244,7 +256,7 @@ setInterval(function(){
             if (ball.x < 0) {
                 score1 ++
                 if (score1 >= 11 && (score1 - score2)>= 2 ){
-                    disconnect = true;
+                    //disconnect = true;
                     victoir1++;
                     ball.state = false;
                 }
@@ -261,12 +273,12 @@ setInterval(function(){
     for(var i in SOCKET_LIST){
         var socket = SOCKET_LIST[i];
         socket.emit('newPositions',pack);
-        if (disconnect){
-            socket.broadcast.emit('rejeuer' ,{rejeuer: true});
-            console.log('list');
-            disconnect = false;
-
-        }
+        // if (disconnect){
+        //     socket.broadcast.emit('rejeuer' ,{rejeuer: true});
+        //     console.log('list');
+        //     disconnect = false;
+        //
+        // }
 
     }
 
